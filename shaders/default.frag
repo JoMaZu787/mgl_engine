@@ -16,6 +16,25 @@ uniform Light light;
 uniform sampler2D u_texture_0;
 uniform vec3 camPos;
 
+vec3 uncharted2Tonemap(const vec3 x) {
+	const float A = 0.15;
+	const float B = 0.50;
+	const float C = 0.10;
+	const float D = 0.20;
+	const float E = 0.02;
+	const float F = 0.30;
+	return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
+}
+
+vec3 tonemapUncharted2(const vec3 color) {
+	const float W = 11.2;
+	const float exposureBias = 2.0;
+	vec3 curr = uncharted2Tonemap(exposureBias * color);
+	vec3 whiteScale = 1.0 / uncharted2Tonemap(vec3(W));
+	return curr * whiteScale;
+}
+
+
 vec3 getLight(vec3 albedo) {
     vec3 N = normalize(normal);
     vec3 V = normalize(camPos - fragPos);
@@ -25,7 +44,7 @@ vec3 getLight(vec3 albedo) {
     vec3 H = normalize(V + L);
 
     // Calculate the roughness (example value)
-    float roughness = 1.0;
+    float roughness = 0.8;
 
     // Calculate the NdotL and NdotV terms
     float NdotL = max(dot(N, L), 0.0);
@@ -59,5 +78,7 @@ vec3 getLight(vec3 albedo) {
 
 void main() {
     vec3 color = texture(u_texture_0, uv_0).rgb;
-    fragColor = vec4(getLight(color), 1.0);
+    color = getLight(color);
+    color = tonemapUncharted2(color);
+    fragColor = vec4(color, 1.0);
 }
