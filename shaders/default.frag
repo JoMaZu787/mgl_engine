@@ -55,12 +55,9 @@ vec3 getLight(vec3 albedo) {
     vec3 lighting = specular + diffuse + ambient;
 
     return lighting;
-
 }
 
 void main() {
     vec3 color = texture(u_texture_0, uv_0).rgb;
     fragColor = vec4(getLight(color), 1.0);
-    fragColor = fragColor - vec4(getLight(color), 1.0);
-    fragColor = fragColor + vec4(uv_0, 0.0, 1.0);
 }
