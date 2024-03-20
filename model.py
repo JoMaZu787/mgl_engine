@@ -26,6 +26,7 @@ class Cube(BaseModel):
     def __init__(self, app, vao_name='cube', tex_id=0):
         super().__init__(app, vao_name, tex_id)
         self.texture = None
+        self.normal_texure = None
         self.on_init()
 
     def update(self):
@@ -38,7 +39,7 @@ class Cube(BaseModel):
         # texture
         self.texture = self.app.mesh.texture.textures[self.tex_id]
         self.program['u_texture_0'] = 0
-        self.texture.use()
+        self.texture.use(0)
         # mvp
         self.program['m_proj'].write(self.app.camera.m_proj)
         self.program['m_view'].write(self.app.camera.m_view)

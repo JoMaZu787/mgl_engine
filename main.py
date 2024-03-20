@@ -30,13 +30,13 @@ class GraphicsEngin:
         self.time = 0
         self.delta_time = 0
         # light
-        self.light = Light()
+        self.light = Light(intensity=2)
         # camera
         self.camera = Camera(self)
         # mesh
         self.mesh = Mesh(self)
         # scene
-        self.scene = model.Cube(self)
+        self.scene = model.Cube(self, tex_id=2)
 
     def check_events(self):
         for event in pg.event.get():
