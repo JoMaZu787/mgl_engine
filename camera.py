@@ -57,9 +57,9 @@ class Camera:
             self.position += self.right * velocity
         if keys[pg.K_a]:
             self.position -= self.right * velocity
-        if keys[pg.K_q]:
+        if keys[pg.K_SPACE]:
             self.position += self.up * velocity
-        if keys[pg.K_e]:
+        if keys[pg.K_LSHIFT]:
             self.position -= self.up * velocity
 
     def get_view_matrix(self):
