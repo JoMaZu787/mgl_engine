@@ -35,8 +35,8 @@ vec3 tonemapUncharted2(const vec3 color) {
 }
 
 
-vec3 getLight(vec3 albedo) {
-    vec3 N = normalize(normal);
+vec3 getLight(vec3 albedo, vec3 normal_) {
+    vec3 N = normalize(normal_);
     vec3 V = normalize(camPos - fragPos);
     vec3 L = normalize(light.position - fragPos);
 
@@ -68,17 +68,17 @@ vec3 getLight(vec3 albedo) {
     // Diffuse
     vec3 diffuse = (NdotL * intensity) * albedo;
 
-    vec3 ambient = 0.1 * albedo;
+    vec3 ambient = 0.2 * albedo;
 
     // Combine specular and diffuse reflections
-    vec3 lighting = specular + diffuse + ambient;
+    vec3 lighting = max(vec3(0), specular + diffuse) + ambient;
 
     return lighting;
 }
 
 void main() {
     vec3 color = texture(u_texture_0, uv_0).rgb;
-    color = getLight(color);
+    color = getLight(color, normal);
     color = tonemapUncharted2(color);
     fragColor = vec4(color, 1.0);
 }
