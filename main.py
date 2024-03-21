@@ -62,6 +62,7 @@ class GraphicsEngin:
             self.time = self.get_time()
             self.check_events()
             self.camera.update()
+            pg.mouse.set_pos(pg.Vector2(pg.display.get_surface().get_size())/2)
             self.render()
             self.delta_time = self.clock.tick(60)
 

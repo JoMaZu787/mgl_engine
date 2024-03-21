@@ -40,6 +40,8 @@ class Cube(BaseModel):
         self.on_init()
 
     def update(self):
+        self.program['u_texture_0'] = 0
+        self.texture.use(0)
         self.program['m_model'].write(self.m_model)
         self.program['m_view'].write(self.app.camera.m_view)
         self.program['camPos'].write(self.app.camera.position)
@@ -47,8 +49,7 @@ class Cube(BaseModel):
     def on_init(self):
         # texture
         self.texture = self.app.mesh.texture.textures[self.tex_id]
-        self.program['u_texture_0'] = 0
-        self.texture.use(0)
+        
         # mvp
         self.program['m_proj'].write(self.app.camera.m_proj)
         self.program['m_view'].write(self.app.camera.m_view)
