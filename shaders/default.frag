@@ -77,7 +77,6 @@ vec3 getLight(vec3 albedo, vec3 normal_) {
 }
 
 void main() {
-    float gama = 2.2;
     vec3 color = texture(u_texture_0, uv_0).rgb;
 
     color = getLight(color, normal);
