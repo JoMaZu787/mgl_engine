@@ -78,7 +78,9 @@ vec3 getLight(vec3 albedo, vec3 normal_) {
 
 void main() {
     vec3 color = texture(u_texture_0, uv_0).rgb;
+
     color = getLight(color, normal);
     color = tonemapUncharted2(color);
+
     fragColor = vec4(color, 1.0);
 }
