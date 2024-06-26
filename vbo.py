@@ -26,6 +26,39 @@ class BaseVBO:
         vertex_data = self.get_vertex_data()
         vbo = self.ctx.buffer(vertex_data)
         return vbo
+    
+    @staticmethod
+    def get_tangent_data(pos: np.ndarray, normals: np.ndarray, uvs: np.ndarray):
+        pos = pos.reshape([-1, 3, 3])
+        normals = normals.reshape([-1, 3, 3])
+        uvs = uvs.reshape([-1, 3, 2])
+        tangents = []
+        
+        for positions, normals, uvs in zip(pos, normals, uvs):
+            p1, p2, p3 = positions
+            n1, n2, n3 = normals
+            uv1, uv2, uv3 = uvs
+            
+            dUV1 = uv2 - uv1
+            dUV2 = uv3 - uv1
+
+            e1 = p2 - p1
+            e2 = p3 - p1
+
+            f = 1 / (dUV1[0] * dUV2[1] - dUV2[0] * dUV1[1])
+
+            t_flat = np.array([
+                f * (dUV2[1] * e1[0] - dUV1[1] * e2[0]),
+                f * (dUV2[1] * e1[1] - dUV1[1] * e2[1]),
+                f * (dUV2[1] * e1[2] - dUV1[1] * e2[2])
+            ], dtype="f4")
+
+            b1, b2, b3 = np.cross(t_flat, n1), np.cross(t_flat, n2), np.cross(t_flat, n3)
+            t1, t2, t3 = np.cross(b1, n1), np.cross(b2, n2), np.cross(b3, n3)
+            
+            tangents.extend([t1, t2, t3])
+        
+        return np.array(tangents)
 
     def destroy(self):
         self.vbo.release()
@@ -34,8 +67,8 @@ class BaseVBO:
 class CubeVBO(BaseVBO):
     def __init__(self, ctx):
         super().__init__(ctx)
-        self.format = '2f 3f 3f'
-        self.attributes = ['in_texcoord_0', 'in_normal', 'in_position']
+        self.format = '2f 3f 3f 3f'
+        self.attributes = ['in_texcoord_0', 'in_normal', 'in_position', 'in_tangent']
 
     @staticmethod
     def get_data(vertices, indices):
@@ -71,8 +104,11 @@ class CubeVBO(BaseVBO):
                    (0, -1, 0) * 6]
         normals = np.array(normals, dtype='f4').reshape(36, 3)
 
+        tangent_data = self.get_tangent_data(vertex_data, normals, tex_coord_data)
+
         vertex_data = np.hstack([normals, vertex_data])
         vertex_data = np.hstack([tex_coord_data, vertex_data])
+        vertex_data = np.hstack([vertex_data, tangent_data])
         return vertex_data
     
 

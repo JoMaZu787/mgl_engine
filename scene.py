@@ -14,10 +14,7 @@ class Scene:
         app = self.app
         add = self.add_object
 
-        n, s = 30, 2
-        for x in range(-n, n, s):
-            for z in range(-n, n, s):
-                add(model.Cube(app, tex_id=(x//2+z//2)%4 , pos=(x,-s, z)))
+        self.add_object(model.Cube(app, tex_id=2 , pos=(0, 0, 0)))
 
         #add(model.Cube(app))
         #add(model.Cube(app, tex_id=1, pos = (-2.5, 0, 0), rot=(45, 0, 0), scale=(1, 2, 1)))

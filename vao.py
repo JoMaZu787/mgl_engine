@@ -18,9 +18,6 @@ class VAO:
         self.vaos['cat'] =  self.get_vao(
             program=self.program.programs['default'],
             vbo=self.vbo.vbos['cat'])
-        
-
-        # cube voa
 
     def get_vao(self, program, vbo):
         vao = self.ctx.vertex_array(program, [(vbo.vbo, vbo.format, *vbo.attributes)])

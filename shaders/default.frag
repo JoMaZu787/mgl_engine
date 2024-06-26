@@ -6,6 +6,7 @@ layout (location=0) out vec4 fragColor;
 in vec2 uv_0;
 in vec3 normal;
 in vec3 fragPos;
+in vec3 tangent;
 
 struct Light {
     vec3 position;
@@ -14,6 +15,7 @@ struct Light {
 
 uniform Light light;
 uniform sampler2D u_texture_0;
+uniform sampler2D n_texture_0;
 uniform vec3 camPos;
 
 vec3 uncharted2Tonemap(const vec3 x) {
@@ -78,8 +80,14 @@ vec3 getLight(vec3 albedo, vec3 normal_) {
 
 void main() {
     vec3 color = texture(u_texture_0, uv_0).rgb;
+    vec3 normal_map = texture(n_texture_0, uv_0).rgb * 2 - 1;
+    
+    vec3 bitangent = cross(normal, tangent);
+    mat3 tbn = mat3(tangent, bitangent, normal);
 
-    color = getLight(color, normal);
+    vec3 mapped_normal = normalize(normal_map * tbn);
+
+    color = getLight(color, mapped_normal);
     color = tonemapUncharted2(color);
 
     fragColor = vec4(color, 1.0);
