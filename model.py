@@ -62,3 +62,14 @@ class Cube(BaseModel):
         # light
         self.program['light.position'].write(self.app.light.position)
         self.program['light.intensity'].write(self.app.light.intensity)
+        # material
+        self.program['material.Ka'].write(glm.vec3(1.0))
+        self.program['material.Kd'].write(glm.vec3(1.0))
+        self.program['material.Ks'].write(glm.vec3(1.0))
+
+
+class OBJ(BaseModel):
+    def __init__(self, app, vao_name, tex_id, pos = glm.vec3(0, 0, 0), rot = glm.vec3(0, 0, 0), scale=glm.vec3(1, 1, 1), filename: str):
+        super().__init__(app, vao_name, tex_id, pos, rot, scale)
+        
+        self.on_init()

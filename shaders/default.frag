@@ -13,10 +13,17 @@ struct Light {
     vec3 intensity;
 };
 
+struct Material {
+    vec3 Ka;
+    vec3 Ks;
+    vec3 Kd;
+};
+
 uniform Light light;
 uniform sampler2D u_texture_0;
 uniform sampler2D n_texture_0;
 uniform vec3 camPos;
+uniform Material material;
 
 vec3 uncharted2Tonemap(const vec3 x) {
 	const float A = 0.15;
@@ -37,7 +44,7 @@ vec3 tonemapUncharted2(const vec3 color) {
 }
 
 
-vec3 getLight(vec3 albedo, vec3 normal_) {
+vec3 getLight(vec3 albedo, vec3 normal_, vec3 oldNormal) {
     vec3 N = normalize(normal_);
     vec3 V = normalize(camPos - fragPos);
     vec3 L = normalize(light.position - fragPos);
@@ -50,7 +57,7 @@ vec3 getLight(vec3 albedo, vec3 normal_) {
 
     // Calculate the NdotL and NdotV terms
     float NdotL = max(dot(N, L), 0.0);
-    float NdotV = max(dot(N, V), 0.0);
+    float NdotV = abs(dot(N, V));
 
     // Calculate the distribution term using GGX
     float alpha = roughness * roughness;
@@ -65,15 +72,20 @@ vec3 getLight(vec3 albedo, vec3 normal_) {
     vec3 intensity = light.intensity;
 
     // Calculate the specular term
-    vec3 specular = (D * Vis * intensity) / (4.0 * NdotL * NdotV) * albedo;
+    vec3 specular = (D * Vis * intensity) / (4.0 * NdotL * NdotV) * albedo * material.Ks;
 
     // Diffuse
-    vec3 diffuse = (NdotL * intensity) * albedo;
+    vec3 diffuse = intensity * albedo * NdotL * material.Kd;
 
-    vec3 ambient = 0.2 * albedo;
+    vec3 ambient = material.Ka * albedo * 0.3;
 
     // Combine specular and diffuse reflections
-    vec3 lighting = max(vec3(0), specular + diffuse) + ambient;
+    vec3 lighting = max(vec3(0), specular) + max(vec3(0), diffuse);
+    if (dot(oldNormal, L) < 0.0) {
+        lighting = vec3(0);
+    }
+
+    lighting = lighting + ambient;
 
     return lighting;
 }
@@ -81,13 +93,14 @@ vec3 getLight(vec3 albedo, vec3 normal_) {
 void main() {
     vec3 color = texture(u_texture_0, uv_0).rgb;
     vec3 normal_map = texture(n_texture_0, uv_0).rgb * 2 - 1;
+    normal_map = vec3(-normal_map.xy, normal_map.z);
     
     vec3 bitangent = cross(normal, tangent);
     mat3 tbn = mat3(tangent, bitangent, normal);
 
     vec3 mapped_normal = normalize(normal_map * tbn);
 
-    color = getLight(color, mapped_normal);
+    color = getLight(color, mapped_normal, normal);
     color = tonemapUncharted2(color);
 
     fragColor = vec4(color, 1.0);
