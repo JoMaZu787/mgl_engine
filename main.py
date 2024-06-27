@@ -5,6 +5,7 @@ import model
 from camera import Camera
 from light import Light
 from mesh import Mesh
+from scene import Scene
 
 
 class GraphicsEngin:
@@ -36,7 +37,7 @@ class GraphicsEngin:
         # mesh
         self.mesh = Mesh(self)
         # scene
-        self.scene = model.Cube(self, tex_id=2)
+        self.scene = Scene(self)
 
     def check_events(self):
         for event in pg.event.get():
@@ -61,6 +62,7 @@ class GraphicsEngin:
             self.time = self.get_time()
             self.check_events()
             self.camera.update()
+            pg.mouse.set_pos(pg.Vector2(pg.display.get_surface().get_size())/2)
             self.render()
             self.delta_time = self.clock.tick(60)
 
