@@ -1,0 +1,107 @@
+#version 430 core
+#define PI 3.1415926535897932384626433832795
+
+layout (location=0) out vec4 fragColor;
+
+in vec2 uv_0;
+in vec3 normal;
+in vec3 fragPos;
+in vec3 tangent;
+
+struct Light {
+    vec3 position;
+    vec3 intensity;
+};
+
+struct Material {
+    vec3 Ka;
+    vec3 Ks;
+    vec3 Kd;
+};
+
+uniform Light light;
+uniform sampler2D u_texture_0;
+uniform sampler2D n_texture_0;
+uniform vec3 camPos;
+uniform Material material;
+
+vec3 uncharted2Tonemap(const vec3 x) {
+	const float A = 0.15;
+	const float B = 0.50;
+	const float C = 0.10;
+	const float D = 0.20;
+	const float E = 0.02;
+	const float F = 0.30;
+	return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
+}
+
+vec3 tonemapUncharted2(const vec3 color) {
+	const float W = 11.2;
+	const float exposureBias = 2.0;
+	vec3 curr = uncharted2Tonemap(exposureBias * color);
+	vec3 whiteScale = 1.0 / uncharted2Tonemap(vec3(W));
+	return curr * whiteScale;
+}
+
+
+vec3 getLight(vec3 albedo, vec3 normal_, vec3 oldNormal) {
+    vec3 N = normalize(normal_);
+    vec3 V = normalize(camPos - fragPos);
+    vec3 L = normalize(light.position - fragPos);
+
+    // Calculate the half vector (microfacet normal)
+    vec3 H = normalize(V + L);
+
+    // Calculate the roughness (example value)
+    float roughness = 0.8;
+
+    // Calculate the NdotL and NdotV terms
+    float NdotL = max(dot(N, L), 0.0);
+    float NdotV = abs(dot(N, V));
+
+    // Calculate the distribution term using GGX
+    float alpha = roughness * roughness;
+    float alpha2 = alpha * alpha;
+    float NdotH = max(dot(N, H), 0.0);
+    float D = alpha2 / (PI * pow(NdotH * NdotH * (alpha2 - 1.0) + 1.0, 2.0));
+
+    // Calculate the geometric attenuation term
+    float Vis = min(1.0, min(2.0 * NdotH * NdotV / dot(V, H), 2.0 * NdotH * NdotL / dot(V, H)));
+
+    // Apply the intensity for specular
+    vec3 intensity = light.intensity;
+
+    // Calculate the specular term
+    vec3 specular = (D * Vis * intensity) / (4.0 * NdotL * NdotV) * albedo * material.Ks;
+
+    // Diffuse
+    vec3 diffuse = intensity * albedo * NdotL * material.Kd;
+
+    vec3 ambient = material.Ka * albedo * 0.3;
+
+    // Combine specular and diffuse reflections
+    vec3 lighting = max(vec3(0), specular) + max(vec3(0), diffuse);
+    if (dot(oldNormal, L) < 0.0) {
+        lighting = vec3(0);
+    }
+
+    lighting = lighting + ambient;
+
+    return lighting;
+}
+
+void main() {
+    vec3 color = texture(u_texture_0, uv_0).rgb;
+    vec3 normal_map = texture(n_texture_0, uv_0).rgb * 2 - 1;
+    normal_map = vec3(-normal_map.xy, normal_map.z);
+    
+    vec3 bitangent = cross(normal, tangent);
+    mat3 tbn = mat3(tangent, bitangent, normal);
+
+    vec3 mapped_normal = normalize(normal_map * tbn);
+
+    color = getLight(color, mapped_normal, normal);
+    color = tonemapUncharted2(color);
+
+    fragColor = vec4(color, 1.0);
+}
