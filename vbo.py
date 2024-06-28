@@ -1,19 +1,7 @@
 from __future__ import annotations
 import numpy as np
 import moderngl as mgl
-import pywavefront
-
-
-class VBO:
-    def __init__(self, ctx):
-        self.vbos = {}
-        self.vbos['cube'] = CubeVBO(ctx)
-
-    def set_vbo(self, name: str, vbo: BaseVBO):
-        self.vbos[name] = vbo
-
-    def destroy(self):
-        [vbo.destroy() for vbo in self.vbos.values()]   
+import pywavefront   
 
 
 class BaseVBO:
