@@ -1,14 +1,17 @@
 import glm
+import vbo
 
 
 class BaseModel:
-    def __init__(self, app, vao_name, tex_id, pos = glm.vec3(0, 0, 0), rot = glm.vec3(0, 0, 0), scale=glm.vec3(1, 1, 1)):
+    def __init__(self, app, tex_path, normal_tex_path, vbo, vao_name, pos = glm.vec3(0, 0, 0), rot = glm.vec3(0, 0, 0), scale=glm.vec3(1, 1, 1)):
         self.app = app
         self.pos = pos
         self.rot = glm.vec3([glm.radians(a) for a in rot])
         self.scale = scale
         self.m_model = self.get_model_matrix()
-        self.tex_id = tex_id
+        self.tex_path = tex_path
+        self.normal_tex_path = normal_tex_path
+        app.mesh.vao.set_vao(vbo, vao_name, "default")
         self.vao = app.mesh.vao.vaos[vao_name]
         self.program = self.vao.program
         self.camera = self.app.camera
@@ -33,8 +36,8 @@ class BaseModel:
 
 
 class Cube(BaseModel):
-    def __init__(self, app, vao_name='cube', tex_id=0, pos = glm.vec3(0, 0, 0), rot = glm.vec3(0, 0, 0), scale = glm.vec3(1, 1, 1)):
-        super().__init__(app, vao_name, tex_id, pos, rot, scale)
+    def __init__(self, app, tex_path, normal_tex_path=None, vao_name='cube', pos = glm.vec3(0, 0, 0), rot = glm.vec3(0, 0, 0), scale = glm.vec3(1, 1, 1)):
+        super().__init__(app, tex_path, normal_tex_path, vbo.CubeVBO(app.ctx), vao_name, pos, rot, scale)
         self.texture = None
         self.normal_texure = None
         self.on_init()
@@ -50,10 +53,10 @@ class Cube(BaseModel):
 
     def on_init(self):
         # texture
-        self.texture = self.app.mesh.texture.textures[self.tex_id]
+        self.texture = self.app.mesh.texture.get_texture(self.tex_path)
 
-        if self.tex_id == 2:
-            self.normal_texure = self.app.mesh.texture.textures["2_n"]
+        if self.normal_tex_path is not None:
+            self.normal_texure = self.app.mesh.texture.get_texture(self.normal_tex_path)
         
         # mvp
         self.program['m_proj'].write(self.app.camera.m_proj)
@@ -68,8 +71,28 @@ class Cube(BaseModel):
         self.program['material.Ks'].write(glm.vec3(1.0))
 
 
-class OBJ(BaseModel):
-    def __init__(self, app, vao_name, tex_id, pos = glm.vec3(0, 0, 0), rot = glm.vec3(0, 0, 0), scale=glm.vec3(1, 1, 1), filename: str):
-        super().__init__(app, vao_name, tex_id, pos, rot, scale)
-        
+class ObjModel(BaseModel):
+    def __init__(self, app, vao_name: str, tex_path: str, normal_tex_path: str, path: str, pos = glm.vec3(0, 0, 0), rot = glm.vec3(0, 0, 0), scale=glm.vec3(1, 1, 1)):
+        super().__init__(app, tex_path, normal_tex_path, vao_name, pos, rot, scale)
+        self.texture = None
+        self.normal_texure = None
         self.on_init()
+
+    def on_init(self):
+        # texture
+        self.texture = self.app.mesh.texture.get_texture(self.tex_path)
+
+        if self.normal_tex_path is not None:
+            self.normal_texure = self.app.mesh.texture.get_texture(self.normal_tex_path)
+        
+        # mvp
+        self.program['m_proj'].write(self.app.camera.m_proj)
+        self.program['m_view'].write(self.app.camera.m_view)
+        self.program['m_model'].write(self.m_model)
+        # light
+        self.program['light.position'].write(self.app.light.position)
+        self.program['light.intensity'].write(self.app.light.intensity)
+        # material
+        self.program['material.Ka'].write(glm.vec3(1.0))
+        self.program['material.Kd'].write(glm.vec3(1.0))
+        self.program['material.Ks'].write(glm.vec3(1.0))

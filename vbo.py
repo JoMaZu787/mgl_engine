@@ -1,16 +1,7 @@
+from __future__ import annotations
 import numpy as np
 import moderngl as mgl
-import pywavefront
-
-
-class VBO:
-    def __init__(self, ctx):
-        self.vbos = {}
-        self.vbos['cube'] = CubeVBO(ctx)
-        self.vbos['cat'] = CatVBO(ctx)
-
-    def destroy(self):
-        [vbo.destroy() for vbo in self.vbos.values()]
+import pywavefront   
 
 
 class BaseVBO:
@@ -45,16 +36,21 @@ class BaseVBO:
             e1 = p2 - p1
             e2 = p3 - p1
 
-            f = 1 / (dUV1[0] * dUV2[1] - dUV2[0] * dUV1[1])
+            if (dUV1[0] * dUV2[1] - dUV2[0] * dUV1[1]) == 0:
+                t1 = np.array([0, 0, 0], dtype="f4")
+                t2 = np.array([0, 0, 0], dtype="f4")
+                t3 = np.array([0, 0, 0], dtype="f4")
+            else:
+                f = 1 / (dUV1[0] * dUV2[1] - dUV2[0] * dUV1[1])
 
-            t_flat = np.array([
-                f * (dUV2[1] * e1[0] - dUV1[1] * e2[0]),
-                f * (dUV2[1] * e1[1] - dUV1[1] * e2[1]),
-                f * (dUV2[1] * e1[2] - dUV1[1] * e2[2])
-            ], dtype="f4")
+                t_flat = np.array([
+                    f * (dUV2[1] * e1[0] - dUV1[1] * e2[0]),
+                    f * (dUV2[1] * e1[1] - dUV1[1] * e2[1]),
+                    f * (dUV2[1] * e1[2] - dUV1[1] * e2[2])
+                ], dtype="f4")
 
-            b1, b2, b3 = np.cross(t_flat, n1), np.cross(t_flat, n2), np.cross(t_flat, n3)
-            t1, t2, t3 = np.cross(b1, n1), np.cross(b2, n2), np.cross(b3, n3)
+                b1, b2, b3 = np.cross(t_flat, n1), np.cross(t_flat, n2), np.cross(t_flat, n3)
+                t1, t2, t3 = np.cross(b1, n1), np.cross(b2, n2), np.cross(b3, n3)
             
             tangents.extend([t1, t2, t3])
         
@@ -110,18 +106,23 @@ class CubeVBO(BaseVBO):
         vertex_data = np.hstack([tex_coord_data, vertex_data])
         vertex_data = np.hstack([vertex_data, tangent_data])
         return vertex_data
-    
 
-class CatVBO(BaseVBO):
-    def __init__(self, ctx):
+
+class ObjVBO(BaseVBO):
+    def __init__(self, ctx, path: str):
+        self.path = path
         super().__init__(ctx)
-        self.format = '2f 3f 3f'
-        self.attributes = ['in_texcoord_0', 'in_normal', 'in_position']
+        self.format = '2f 3f 3f 3f'
+        self.attributes = ['in_texcoord_0', 'in_normal', 'in_position', 'in_tangent']
 
     def get_vertex_data(self):
-        objs = pywavefront.Wavefront('objects/cat/20430_Cat_v1_NEW.obj', cache=True, parse=True)
+        objs = pywavefront.Wavefront(self.path, cache=True, parse=True)
         obj = objs.materials.popitem()[1]
         vertex_data = obj.vertices
         vertex_data = np.array(vertex_data, dtype='f4')
+        vertex_data = np.split(vertex_data, len(vertex_data)//8)
+        vertex_data = np.array(vertex_data, dtype='f4')
+        texcoords, normals, positions = np.hsplit(vertex_data, [2, 5])
+        tangents = self.get_tangent_data(positions, normals, texcoords)
+        vertex_data = np.hstack([vertex_data, tangents])
         return vertex_data
-
