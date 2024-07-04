@@ -73,7 +73,7 @@ class Cube(BaseModel):
 
 class ObjModel(BaseModel):
     def __init__(self, app, vao_name: str, tex_path: str, normal_tex_path: str, path: str, pos = glm.vec3(0, 0, 0), rot = glm.vec3(0, 0, 0), scale=glm.vec3(1, 1, 1)):
-        super().__init__(app, tex_path, normal_tex_path, vao_name, pos, rot, scale)
+        super().__init__(app, tex_path, normal_tex_path, vbo.ObjVBO(app.ctx, path), vao_name, pos, rot, scale)
         self.texture = None
         self.normal_texure = None
         self.on_init()

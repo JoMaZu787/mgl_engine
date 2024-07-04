@@ -3,6 +3,7 @@
 class ShaderProgram:
     def __init__(self, ctx):
         self.ctx = ctx
+        self.programs = {}
 
     def get_program(self, shader_program_name):
         if shader_program_name in self.programs.keys():

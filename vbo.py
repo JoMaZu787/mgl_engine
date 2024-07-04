@@ -1,6 +1,7 @@
 from __future__ import annotations
 import numpy as np
 import moderngl as mgl
+from numba import njit
 import pywavefront   
 
 
@@ -19,13 +20,20 @@ class BaseVBO:
         return vbo
     
     @staticmethod
+    #@njit
     def get_tangent_data(pos: np.ndarray, normals: np.ndarray, uvs: np.ndarray):
-        pos = pos.reshape([-1, 3, 3])
-        normals = normals.reshape([-1, 3, 3])
-        uvs = uvs.reshape([-1, 3, 2])
-        tangents = []
+        pos = np.copy(pos)
+        normals = np.copy(normals)
+        uvs = np.copy(uvs)
+
+        pos = pos.reshape(len(pos)//3, 3, 3)
+        normals = normals.reshape(len(normals)//3, 3, 3)
+        uvs = uvs.reshape(len(uvs)//3, 3, 2)
+        tangents = np.empty((len(pos)*3, 3))
         
-        for positions, normals, uvs in zip(pos, normals, uvs):
+        for i, j in enumerate(zip(pos, normals, uvs)):
+            positions, normals, uvs = j
+
             p1, p2, p3 = positions
             n1, n2, n3 = normals
             uv1, uv2, uv3 = uvs
@@ -52,9 +60,11 @@ class BaseVBO:
                 b1, b2, b3 = np.cross(t_flat, n1), np.cross(t_flat, n2), np.cross(t_flat, n3)
                 t1, t2, t3 = np.cross(b1, n1), np.cross(b2, n2), np.cross(b3, n3)
             
-            tangents.extend([t1, t2, t3])
+                tangents[i*3] = t1
+                tangents[i*3+1] = t2
+                tangents[i*3+2] = t3
         
-        return np.array(tangents)
+        return tangents
 
     def destroy(self):
         self.vbo.release()

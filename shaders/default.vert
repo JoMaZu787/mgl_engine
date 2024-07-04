@@ -2,7 +2,7 @@
 
 layout (location = 0) in vec2 in_texcoord_0;
 layout (location = 1) in vec3 in_normal;
-layout (location = 2) in vec3 in_positin;
+layout (location = 2) in vec3 in_position;
 layout (location = 3) in vec3 in_tangent;
 
 out vec2 uv_0;

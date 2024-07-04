@@ -12,9 +12,8 @@ class Scene:
 
     def load(self):
         app = self.app
-        add = self.add_object
 
-        self.add_object(model.Cube(app, tex_path="textures/img_2.png", normal_tex_path="textures/img_2_n.png" , pos=(0, 0, 0)))
+        self.add_object(model.ObjModel(app, vao_name="cat", tex_path="textures/img_2.png", normal_tex_path="textures/img_2_n.png", path="objects/cat/20430_Cat_v1_NEW.obj" , pos=(0, 0, 0)))
 
         #add(model.Cube(app))
         #add(model.Cube(app, tex_id=1, pos = (-2.5, 0, 0), rot=(45, 0, 0), scale=(1, 2, 1)))

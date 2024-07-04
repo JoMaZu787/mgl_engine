@@ -1,11 +1,22 @@
+import weakref
 import pygame as pg
 import moderngl as mgl
 import sys
 import model
+import time
 from camera import Camera
 from light import Light
 from mesh import Mesh
 from scene import Scene
+import atexit
+import pickle
+
+times = []
+
+@atexit.register
+def exit_handler():
+    with open("test.pickle", "wb") as f:
+        pickle.dump(times, f)
 
 
 class GraphicsEngin:
@@ -50,8 +61,11 @@ class GraphicsEngin:
         self.ctx.clear(color=(0.08, 0.16, 0.18, 1.0))
 
         self.scene.render()
-
+        
+        start = time.perf_counter()
         pg.display.flip()
+        length = time.perf_counter() - start
+        times.append(length)
 
     @staticmethod
     def get_time():

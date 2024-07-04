@@ -18,5 +18,6 @@ class VAO:
             vbo=vbo)
 
     def destroy(self):
-        self.vbo.destroy()
+        for vao in self.vaos.values():
+            vao.release()
         self.program.destroy()
